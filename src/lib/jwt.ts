@@ -1,16 +1,15 @@
 import 'server-only';
 
-import { SignJWT, jwtVerify } from 'jose';
+import { JWTPayload, SignJWT, jwtVerify } from 'jose';
 
 const secretKey = process.env.SECRET;
 const key = new TextEncoder().encode(secretKey);
 
-export type SessionPayload = {
-    userId: string | number;
-    expiresAt: Date;
-  };
+type Aaa = {
+  name: string
+}
 
-export async function encrypt(payload: SessionPayload) {
+export async function encrypt(payload: JWTPayload) {
   return new SignJWT(payload)
     .setProtectedHeader({ alg: 'HS256' })
     .setIssuedAt()
@@ -18,14 +17,14 @@ export async function encrypt(payload: SessionPayload) {
     .sign(key);
 }
 
-export async function decrypt(session: string | undefined = '') {
+export async function decrypt<ExpectedObject>(session: string | undefined = '') {
   try {
-    const { payload } = await jwtVerify(session, key, {
+    const { payload } = await jwtVerify<ExpectedObject>(session, key, {
       algorithms: ['HS256'],
     });
-    return payload;
+    return { payload, error: null };
   } catch (error) {
-    return null;
+    return { error, payload: null }
   }
 }
 

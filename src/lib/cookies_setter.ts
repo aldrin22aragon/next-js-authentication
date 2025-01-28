@@ -2,9 +2,17 @@
 import { cookies } from 'next/headers';
 import { redirect } from 'next/navigation';
 import { decrypt, encrypt } from './jwt';
-export async function setSession(userId: string) {
-    const expiresAt = new Date(Date.now() + 60 * 60 * 1000);
-    const session = await encrypt({ userId, expiresAt });
+import { number } from 'zod';
+
+export type SessionPayload = {
+    userId: string | number;
+    expiresAt?: Date;
+};
+
+export async function setSession(payload: SessionPayload) {
+    const one_hour_to_Milliseconds = 3600000
+    const expiresAt = new Date(Date.now() + one_hour_to_Milliseconds); // dapat one day yung exxpiration
+    const session = await encrypt(payload);
     (await cookies()).set('session', session, {
         httpOnly: true,
         secure: true,
@@ -12,17 +20,16 @@ export async function setSession(userId: string) {
         sameSite: 'lax',
         path: '/',
     });
-
     redirect('/dashboard');
 }
 
 export async function verifySession() {
     const cookie = (await cookies()).get('session')?.value;
     const session = await decrypt(cookie);
-    if (!session?.userId) {
-        redirect('/login');
+    if (!session.payload?.userId) {
+        redirect('/');
     }
-    return { isAuth: true, userId: Number(session.userId) };
+    return { isAuth: true, userId: Number(session.payload?.userId) };
 }
 
 export async function updateSession() {

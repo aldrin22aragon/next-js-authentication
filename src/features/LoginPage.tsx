@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button"
 import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage, } from "@/components/ui/form"
 import { Input } from "@/components/ui/input"
 import { login } from "@/db/users"
+import { redirect, RedirectType } from "next/navigation"
 
 const formSchema = z.object({
     username: z.string().min(4, { message: "At least 4 chars username" }),
@@ -26,7 +27,8 @@ export default function LoginComponent() {
 
     async function onSubmit(values: z.infer<typeof formSchema>) {
         const res = await login(values.username, values.password)
-        if (!res) alert("mali")
+        if (!res) return alert("mali")
+        redirect("/dashboard", RedirectType.replace)
     }
 
     return (
