@@ -1,1 +1,65 @@
 https://github.com/vercel-labs/app-router-auth
+
+
+-----Prisma Setup
+1.Install Dependencies
+    First, you need to install the necessary dependencies. Run the following command in your terminal:
+        npm install @prisma/client
+    Next, you need to install the Prisma CLI as a development dependency:
+        npm install prisma --save-dev
+2.Initialize Prisma
+    Initialize Prisma in your project by running the following command:
+        npx prisma init
+    This will create a prisma directory with a schema.prisma file and a .env file.
+3.Configure the Database
+    Open the .env file and configure your database connection string. For example, 
+    if you're using a mysql database, it might look something like this:
+        DATABASE_URL="mysql://root:root@localhost:3306/nextjs_shadcn_ui"
+4.Define Your Data Model
+    Open the schema.prisma file in the prisma directory and define your data model. 
+    Here’s an example of a simple data model with a User and Post:
+        generator client {
+            provider = "prisma-client-js"
+        }
+        datasource db {
+            provider = "postgresql"
+            url      = env("DATABASE_URL")
+        }
+        model User {
+            id    Int     @id @default(autoincrement())
+            email String  @unique
+            name  String?
+            posts Post[]
+        }   
+5.Run Prisma Migrate
+    After defining your data model, run the Prisma migration to create the database tables:
+        npx prisma migrate dev --name init
+6.Generate Prisma Client
+        npx prisma generate
+7.Integrate Prisma with Next.js
+    Create a lib directory in your Next.js project and add a prisma.ts file to manage your Prisma Client instance:
+        // lib/prisma.ts
+        import { PrismaClient } from '@prisma/client';
+
+        const globalForPrisma = global as unknown as { prisma: PrismaClient };
+
+        export const prisma = globalForPrisma.prisma || new PrismaClient();
+
+        if (process.env.NODE_ENV !== 'production') globalForPrisma.prisma = prisma;
+9.Use Prisma in the App Router (Next.js 13+)
+    If you are using the new App Router in Next.js 13+, you can use Prisma in your route handlers like this:
+        // app/api/users/route.ts
+        import { prisma } from '../../../lib/prisma';
+
+        export async function GET() {
+            const users = await prisma.user.findMany();
+            return NextResponse.json(users);
+        }
+10. Run npx prisma studio
+        open http://localhost:5555/ in browser
+
+.env variables
+
+DATABASE_URL="mysql://root:root@localhost:3306/nextjs_shadcn_ui"
+
+ACCESS_TOKEN_KEY="just=random=key-"
