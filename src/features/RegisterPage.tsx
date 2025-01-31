@@ -6,33 +6,40 @@ import * as z from "zod"
 import { Button } from "@/components/ui/button"
 import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage, } from "@/components/ui/form"
 import { Input } from "@/components/ui/input"
+import { registerUser } from "@/db/users"
 
 const formSchema = z.object({
-    fname: z.string(),
-    surname: z.string(),
-    username: z.string(),
-    password: z.string(),
-    c_password: z.string()
-});
-
+    fname: z.string().min(4, "Minimum of 4 characters"),
+    surname: z.string().min(4, "Minimum of 4 characters"),
+    username: z.string().min(4, "Minimum of 4 characters"),
+    password: z.string().min(4, "Minimum of 4 characters"),
+    c_password: z.string().min(4, "Minimum of 4 characters")
+}).refine(data => data.password === data.c_password,
+    { message: "Passwords does not matched each other.", path: ["c_password"] });
+//
 export default function RegisterComponent() {
-
     const form = useForm<z.infer<typeof formSchema>>({
         resolver: zodResolver(formSchema),
-
+        defaultValues: {
+            c_password: "",
+            fname: "",
+            password: "",
+            surname: "",
+            username: ""
+        }
     })
 
-    function onSubmit(values: z.infer<typeof formSchema>) {
-        try {
-            console.log(values);
-            toast(
-                <pre className="mt-2 w-[340px] rounded-md bg-slate-950 p-4">
-                    <code className="text-white">{JSON.stringify(values, null, 2)}</code>
-                </pre>
-            );
-        } catch (error) {
-            console.error("Form submission error", error);
-            toast.error("Failed to submit the form. Please try again.");
+    async function onSubmit(values: z.infer<typeof formSchema>) {
+        const register = await registerUser({
+            name: values.fname,
+            password: values.password,
+            surename: values.fname,
+            username: values.username
+        })
+        if (register.user) {
+            alert("Saved")
+        } else {
+            alert(register.error)
         }
     }
 
@@ -66,7 +73,7 @@ export default function RegisterComponent() {
                             {/* <FormLabel>Surename</FormLabel> */}
                             <FormControl className="mb-2">
                                 <Input
-                                    placeholder="Surename"
+                                    placeholder="Last Name"
 
                                     type=""
                                     {...field} />
@@ -111,23 +118,19 @@ export default function RegisterComponent() {
                         </FormItem>
                     )}
                 />
-                <FormField
-                    control={form.control}
-                    name="c_password"
-                    render={({ field }) => (
-                        <FormItem>
-                            {/* <FormLabel>Confirm password</FormLabel> */}
-                            <FormControl className="mb-2">
-                                <Input
-                                    placeholder="Confirm password"
-                                    type="password"
-                                    {...field} />
-                            </FormControl>
+                <FormField control={form.control} name="c_password" render={({ field }) => (
+                    <FormItem>
+                        {/* <FormLabel>Confirm password</FormLabel> */}
+                        <FormControl className="mb-2">
+                            <Input
+                                placeholder="Confirm password"
+                                type="password"
+                                {...field} />
+                        </FormControl>
 
-                            <FormMessage />
-                        </FormItem>
-                    )}
-                />
+                        <FormMessage />
+                    </FormItem>
+                )} />
                 <Button type="submit" className="mt-2">Submit</Button>
             </form>
         </Form>
