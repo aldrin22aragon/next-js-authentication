@@ -11,7 +11,7 @@ export type Cookie = "token" | "refresh-token"
 
 
 export type PayloadToken = {
-    userId: string | number;
+    userId: number;
 };
 
 export async function getCookie(type: Cookie) {
@@ -43,7 +43,7 @@ export async function updateTokenExpirationCookie(type: Cookie) {
     if (!ver.payload) {
         if (ver.error && ver.error?.code == "ERR_JWT_EXPIRED") {
             payload = { userId: ver.error.payload.userId }
-        }else{
+        } else {
             payload = null
         }
     } else {
@@ -63,7 +63,7 @@ export async function updateTokenExpirationCookie(type: Cookie) {
             sameSite: 'lax',
             path: '/',
         });
-        return true 
+        return true
     }
     return false
 

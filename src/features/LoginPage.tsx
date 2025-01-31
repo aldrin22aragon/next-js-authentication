@@ -27,7 +27,10 @@ export default function LoginComponent() {
     })
 
     async function onSubmit(values: z.infer<typeof formSchema>) {
-        const res = await login(values.username, values.password)
+        const res = await login({
+            password: values.password,
+            username: values.username
+        })
         if (!res) return alert("mali")
         redirect("/dashboard", RedirectType.replace)
     }
