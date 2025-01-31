@@ -12,7 +12,6 @@ export default function Home() {
             <TabsTrigger value="Login">Login</TabsTrigger>
             <TabsTrigger value="Register">Register</TabsTrigger>
           </TabsList>
-          
           <TabsContent value="Login">
             <LoginComponent />
           </TabsContent>

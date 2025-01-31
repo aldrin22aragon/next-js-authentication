@@ -1,6 +1,6 @@
 "use server"
 
-import { setSession } from "@/lib/cookies_setter"
+import { setCookie } from "@/lib/cookies_setter"
 import { delay } from "@/lib/utils"
 
 export async function login(username: string, password: string): Promise<boolean> {
@@ -8,7 +8,8 @@ export async function login(username: string, password: string): Promise<boolean
     await delay(1000)
     const found = username === "drihnz" && password === "1234"
     if (found) {
-        await setSession({ userId: "drihnz" })
+        await setCookie({ userId: "drihnz" }, "token")
+        await setCookie({ userId: "drihnz" }, "refresh-token")
     }
     return found
 }

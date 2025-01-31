@@ -9,6 +9,7 @@ import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, For
 import { Input } from "@/components/ui/input"
 import { login } from "@/db/users"
 import { redirect, RedirectType } from "next/navigation"
+import { Prisma, PrismaClient } from '@prisma/client'
 
 const formSchema = z.object({
     username: z.string().min(4, { message: "At least 4 chars username" }),

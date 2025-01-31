@@ -1,56 +1,79 @@
 
 import { cookies } from 'next/headers';
-import { redirect } from 'next/navigation';
-import { decrypt, encrypt } from './jwt';
-import { number } from 'zod';
+import { verify, encrypt } from './jwt';
+import { Cookie } from 'next/font/google';
 
-export type SessionPayload = {
+const one_hour_to_Milliseconds = 3600000
+const refreshTokenExpiration = "1 week"
+const tokenExpiration = "1 min"
+
+export type Cookie = "token" | "refresh-token"
+
+
+export type PayloadToken = {
     userId: string | number;
-    expiresAt?: Date;
 };
 
-export async function setSession(payload: SessionPayload) {
-    const one_hour_to_Milliseconds = 3600000
-    const expiresAt = new Date(Date.now() + one_hour_to_Milliseconds); // dapat one day yung exxpiration
-    const session = await encrypt(payload);
-    (await cookies()).set('session', session, {
-        httpOnly: true,
-        secure: true,
-        expires: expiresAt,
-        sameSite: 'lax',
-        path: '/',
-    });
-    redirect('/dashboard');
+export async function getCookie(type: Cookie) {
+    const cook = (await cookies()).get(type)
+    if (cook) return cook.value
+    return ""
 }
 
-export async function verifySession() {
-    const cookie = (await cookies()).get('session')?.value;
-    const session = await decrypt(cookie);
-    if (!session.payload?.userId) {
-        redirect('/');
+export async function setCookie(payload: PayloadToken, type: Cookie) {
+    let token = null
+    if (type == 'token') {
+        token = await encrypt(payload, tokenExpiration);
+    } else {
+        token = await encrypt(payload, refreshTokenExpiration);
     }
-    return { isAuth: true, userId: Number(session.payload?.userId) };
-}
-
-export async function updateSession() {
-    const session = (await cookies()).get('session')?.value;
-    const payload = await decrypt(session);
-
-    if (!session || !payload) {
-        return null;
-    }
-
-    const expires = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000);
-    (await cookies()).set('session', session, {
+    (await cookies()).set(type, token, {
         httpOnly: true,
         secure: true,
-        expires: expires,
+        // expires: expiresAt,
         sameSite: 'lax',
         path: '/',
     });
 }
 
-export async function deleteSession() {
-    (await cookies()).delete('session');
-    redirect('/login');
+export async function updateTokenExpirationCookie(type: Cookie) {
+    const cookie = (await cookies()).get(type)?.value || "";
+    const ver = await verify<PayloadToken>(cookie);
+    let payload: PayloadToken | null
+    if (!ver.payload) {
+        if (ver.error && ver.error?.code == "ERR_JWT_EXPIRED") {
+            payload = { userId: ver.error.payload.userId }
+        }else{
+            payload = null
+        }
+    } else {
+        payload = { userId: ver.payload.userId }
+    }
+    let token = null
+    if (payload) {
+        if (type == 'token') {
+            token = await encrypt(payload, tokenExpiration);
+        } else {
+            token = await encrypt(payload, refreshTokenExpiration);
+        }
+        (await cookies()).set(type, token, {
+            httpOnly: true,
+            secure: true,
+            // expires: expires,
+            sameSite: 'lax',
+            path: '/',
+        });
+        return true 
+    }
+    return false
+
+}
+export async function verifyCookie(type: Cookie) {
+    const cookie = (await cookies()).get(type)?.value;
+    return await verify<PayloadToken>(cookie);
+}
+
+
+export async function deleteCookie(type: Cookie) {
+    (await cookies()).delete(type);
 }
