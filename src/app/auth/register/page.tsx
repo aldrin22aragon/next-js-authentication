@@ -8,6 +8,7 @@ import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, For
 import { Input } from "@/components/ui/input"
 import { registerUser } from "@/db/users"
 import { redirect, RedirectType } from "next/navigation"
+import Link from "next/link"
 
 const formSchema = z.object({
     fname: z.string().min(4, "Minimum of 4 characters"),
@@ -18,7 +19,7 @@ const formSchema = z.object({
 }).refine(data => data.password === data.c_password,
     { message: "Passwords does not matched each other.", path: ["c_password"] });
 //
-export default function RegisterComponent() {
+export default function RegisterPage() {
     const form = useForm<z.infer<typeof formSchema>>({
         resolver: zodResolver(formSchema),
         defaultValues: {
@@ -38,9 +39,9 @@ export default function RegisterComponent() {
             username: values.username
         })
         if (register.user) {
-            alert("Saved")
+            alert("You are now registered. Please login.")
             form.reset()
-            redirect("/dashboard", RedirectType.push)
+            redirect("/auth/login", RedirectType.push)
         } else {
             alert(register.error)
         }
@@ -135,6 +136,9 @@ export default function RegisterComponent() {
                     </FormItem>
                 )} />
                 <Button type="submit" className="mt-2">Submit</Button>
+                <div className="text-right text-blue-700">
+                    <Link href={"/auth/login"}>Login</Link>
+                </div>
             </form>
         </Form>
     )

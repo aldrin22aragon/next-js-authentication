@@ -3,9 +3,15 @@ import { deleteCookie, getCookie, PayloadToken, updateTokenExpirationCookie, ver
 import { Vault } from 'lucide-react';
 
 // 1. Specify protected and public routes
-const loggedInRoutes = ['/dashboard'];
-const authenticationRoutes = ['/'];
-const redirectToAuthentication = "/"
+const loggedInRoutes = [
+    '/dashboard',
+    '/dashboard/db'
+];
+const authenticationRoutes = [
+    '/auth/login',
+    '/auth/register'
+];
+const redirectToAuthentication = '/auth/login'
 const redirectToDashboard = "/dashboard"
 
 function deleteCookies() {

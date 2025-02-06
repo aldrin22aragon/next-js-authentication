@@ -8,6 +8,7 @@ import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, For
 import { Input } from "@/components/ui/input"
 import { login } from "@/db/users"
 import { redirect, RedirectType } from "next/navigation"
+import Link from "next/link"
 
 const formSchema = z.object({
     username: z.string().min(4, { message: "At least 4 chars username" }),
@@ -59,6 +60,9 @@ export default function LoginComponent() {
                     </FormItem>
                 )} />
                 <Button className="mt-2" type="submit">Submit</Button>
+                <div className="text-right text-blue-700">
+                    <Link href={"/auth/register"}>Register</Link>
+                </div>
             </form>
         </Form>
     )
