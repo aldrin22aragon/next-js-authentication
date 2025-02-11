@@ -1,18 +1,19 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { deleteCookie, getCookie, PayloadToken, updateTokenExpirationCookie, verifyCookie } from './lib/cookies_setter';
+import { deleteCookie, getCookie, updateTokenExpirationCookie, verifyCookie } from './lib/cookies_setter';
 import { Vault } from 'lucide-react';
+import { get } from 'http';
 
 // 1. Specify protected and public routes
-const loggedInRoutes = [
+const loggedInRoutes: string[] = [
     '/dashboard',
     '/dashboard/db'
 ];
-const authenticationRoutes = [
+const authenticationRoutes: string[] = [
     '/auth/login',
     '/auth/register'
 ];
-const redirectToAuthentication = '/auth/login'
-const redirectToDashboard = "/dashboard"
+const redirectToAuthentication: string = '/auth/login'
+const redirectToDashboard: string = "/dashboard"
 
 function deleteCookies() {
     deleteCookie('refresh-token')
@@ -49,7 +50,7 @@ export default async function middleware(req: NextRequest) {
             return NextResponse.next();
         }
     } else {
-        const verify_ = await verifyCookie('token');
+        let verify_ = await verifyCookie('token');
         let isValidJWT: boolean = false
         if (!verify_.payload) {
             if (verify_.error && verify_.error?.code == "ERR_JWT_EXPIRED") {
@@ -57,6 +58,8 @@ export default async function middleware(req: NextRequest) {
                 if (refresh.payload) {
                     const changed = await updateTokenExpirationCookie('token')
                     if (changed) {
+                        // console.log("Renewed token", await getCookie('token'))
+                        verify_ = await verifyCookie('token');
                         isValidJWT = true
                     } else {
                         deleteCookies()
@@ -71,9 +74,11 @@ export default async function middleware(req: NextRequest) {
             isValidJWT = true
         }
         if (isValidJWT) {
+            // console.log(verify_.payload)
             if (!isLoggedInRoute) {
                 return NextResponse.redirect(new URL(redirectToDashboard, req.nextUrl));
             } else {
+                // validation here for Previlleges
                 return NextResponse.next();
             }
         } else {

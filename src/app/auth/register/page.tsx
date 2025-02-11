@@ -20,6 +20,7 @@ const formSchema = z.object({
     { message: "Passwords does not matched each other.", path: ["c_password"] });
 //
 export default function RegisterPage() {
+
     const form = useForm<z.infer<typeof formSchema>>({
         resolver: zodResolver(formSchema),
         defaultValues: {

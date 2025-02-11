@@ -36,7 +36,7 @@ export default function LoginComponent() {
 
     return (
         <Form {...form}>
-            <div className="text-2xl">Authentication</div>
+            <div className="text-2xl">Login Page</div>
             <hr className="mb-2" />
             <form onSubmit={form.handleSubmit(onSubmit)} className="">
                 <FormField control={form.control} name="username" render={({ field }) => (

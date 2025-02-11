@@ -2,6 +2,8 @@
 import { cookies } from 'next/headers';
 import { verify, encrypt } from './jwt';
 import { Cookie } from 'next/font/google';
+import { Previllege, User } from '@prisma/client';
+import { Infer } from 'next/dist/compiled/superstruct';
 
 const one_hour_to_Milliseconds = 3600000
 const refreshTokenExpiration = "1 week"
@@ -11,7 +13,8 @@ export type Cookie = "token" | "refresh-token"
 
 
 export type PayloadToken = {
-    userId: number;
+    userId: number,
+    previlleges: string[]
 };
 
 export async function getCookie(type: Cookie) {
@@ -37,17 +40,17 @@ export async function setCookie(payload: PayloadToken, type: Cookie) {
 }
 
 export async function updateTokenExpirationCookie(type: Cookie) {
-    const cookie = (await cookies()).get(type)?.value || "";
+    const cookie = await getCookie(type);
     const ver = await verify<PayloadToken>(cookie);
     let payload: PayloadToken | null
     if (!ver.payload) {
         if (ver.error && ver.error?.code == "ERR_JWT_EXPIRED") {
-            payload = { userId: ver.error.payload.userId }
+            payload = { userId: ver.error.payload.userId, previlleges: ver.error.payload.previlleges }
         } else {
             payload = null
         }
     } else {
-        payload = { userId: ver.payload.userId }
+        payload = ver.payload
     }
     let token = null
     if (payload) {
@@ -69,7 +72,7 @@ export async function updateTokenExpirationCookie(type: Cookie) {
 
 }
 export async function verifyCookie(type: Cookie) {
-    const cookie = (await cookies()).get(type)?.value;
+    const cookie = await getCookie(type);
     return await verify<PayloadToken>(cookie);
 }
 

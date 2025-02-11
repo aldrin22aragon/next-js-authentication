@@ -1,5 +1,9 @@
+import { RouteType } from "next/dist/lib/load-custom-routes";
+import Link from "next/link";
+
 export default function Db() {
+
     return <>
-        DB page
+        <Link href="/auth/register">Register Page</Link>
     </>
 }

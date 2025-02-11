@@ -5,28 +5,32 @@ import { delay } from "@/lib/utils"
 import { prisma } from "@/lib/prisma"
 import { User } from "@prisma/client"
 import bcrypt from "bcrypt"
+import { revalidatePath } from "next/cache"
 
 type RegisterResponse = {
     error?: string,
     user?: User | null
 }
 
+
+
 export async function login(values: Pick<User, "username" | "password">): Promise<boolean> {
     const user = await prisma.user.findFirst({
-        where: { username: values.username }
+        where: { username: values.username },
+        include: { previlleges: { select: { code: true }, distinct: "code" } }
     })
     if (user) {
         const match = await bcrypt.compare(values.password, user.password);
         if (match) {
-            await setCookie({ userId: user.id }, "token")
-            await setCookie({ userId: user.id }, "refresh-token")
+            await setCookie({userId: user.id, previlleges: user.previlleges.map(p=> p.code)}, "token")
+            await setCookie({userId: user.id, previlleges: user.previlleges.map(p=> p.code)}, "refresh-token")
             return true
         } else {
             return false
         }
     } else {
         return false
-    } 
+    }
 }
 export async function registerUser(value: Omit<User, "id">): Promise<RegisterResponse> {
     await delay(1000)
