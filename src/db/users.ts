@@ -12,8 +12,6 @@ type RegisterResponse = {
     user?: User | null
 }
 
-
-
 export async function login(values: Pick<User, "username" | "password">): Promise<boolean> {
     const user = await prisma.user.findFirst({
         where: { username: values.username },

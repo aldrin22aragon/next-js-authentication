@@ -1,19 +1,18 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { deleteCookie, getCookie, updateTokenExpirationCookie, verifyCookie } from './lib/cookies_setter';
-import { Vault } from 'lucide-react';
-import { get } from 'http';
 
 // 1. Specify protected and public routes
-const loggedInRoutes: string[] = [
+const loggedInRoutes: __next_route_internal_types__.StaticRoutes[] = [
     '/dashboard',
-    '/dashboard/db'
+    '/dashboard/profiles'
 ];
-const authenticationRoutes: string[] = [
+const authenticationRoutes: __next_route_internal_types__.StaticRoutes[] = [
     '/auth/login',
     '/auth/register'
 ];
-const redirectToAuthentication: string = '/auth/login'
-const redirectToDashboard: string = "/dashboard"
+const publicRoute: __next_route_internal_types__.StaticRoutes = "/"
+const redirectToAuthentication: __next_route_internal_types__.StaticRoutes = '/auth/login'
+const redirectToDashboard: __next_route_internal_types__.StaticRoutes = "/dashboard"
 
 function deleteCookies() {
     deleteCookie('refresh-token')
@@ -37,8 +36,10 @@ export default async function middleware(req: NextRequest) {
     // 2. Check if the current route is protected or public
 
     const nextUrl = req.nextUrl.pathname;
-    const isLoggedInRoute = loggedInRoutes.includes(nextUrl);
-    const isAuthenticationRoute = authenticationRoutes.includes(nextUrl);
+    if (nextUrl == publicRoute) return NextResponse.next()
+        
+    const isLoggedInRoute = loggedInRoutes.find(route => route == nextUrl);
+    const isAuthenticationRoute = authenticationRoutes.find(route => route == nextUrl);
 
     const token = await getCookie('token')
     const ref_token = await getCookie('refresh-token')
@@ -79,7 +80,17 @@ export default async function middleware(req: NextRequest) {
                 return NextResponse.redirect(new URL(redirectToDashboard, req.nextUrl));
             } else {
                 // validation here for Previlleges
-                return NextResponse.next();
+                const route: __next_route_internal_types__.StaticRoutes = nextUrl as __next_route_internal_types__.StaticRoutes
+                if (route == '/dashboard/profiles') {
+                    const asd = verify_.payload?.previlleges.find(prev => prev.includes("profiles_view"))
+                    if (asd) {
+                        return NextResponse.next();
+                    } else {
+                        return new NextResponse("Dont have access to this page.", { status: 404 })
+                    }
+                } else {
+                    return NextResponse.next();
+                }
             }
         } else {
             if (!isAuthenticationRoute) {

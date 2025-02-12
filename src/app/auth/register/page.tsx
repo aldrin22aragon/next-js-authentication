@@ -47,7 +47,6 @@ export default function RegisterPage() {
             alert(register.error)
         }
     }
-
     return (
         <Form {...form}>
             <div className="text-2xl">Register</div>
