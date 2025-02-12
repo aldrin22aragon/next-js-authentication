@@ -37,7 +37,7 @@ export default async function middleware(req: NextRequest) {
 
     const nextUrl = req.nextUrl.pathname;
     if (nextUrl == publicRoute) return NextResponse.next()
-        
+
     const isLoggedInRoute = loggedInRoutes.find(route => route == nextUrl);
     const isAuthenticationRoute = authenticationRoutes.find(route => route == nextUrl);
 
@@ -45,11 +45,8 @@ export default async function middleware(req: NextRequest) {
     const ref_token = await getCookie('refresh-token')
 
     if (token == "" || ref_token == "") {
-        if (!isAuthenticationRoute) {
-            return NextResponse.redirect(new URL(redirectToAuthentication, req.nextUrl));
-        } else {
-            return NextResponse.next();
-        }
+        if (!isAuthenticationRoute) return NextResponse.redirect(new URL(redirectToAuthentication, req.nextUrl));
+        return NextResponse.next();
     } else {
         let verify_ = await verifyCookie('token');
         let isValidJWT: boolean = false
@@ -75,29 +72,20 @@ export default async function middleware(req: NextRequest) {
             isValidJWT = true
         }
         if (isValidJWT) {
-            // console.log(verify_.payload)
-            if (!isLoggedInRoute) {
-                return NextResponse.redirect(new URL(redirectToDashboard, req.nextUrl));
-            } else {
-                // validation here for Previlleges
-                const route: __next_route_internal_types__.StaticRoutes = nextUrl as __next_route_internal_types__.StaticRoutes
-                if (route == '/dashboard/profiles') {
-                    const asd = verify_.payload?.previlleges.find(prev => prev.includes("profiles_view"))
-                    if (asd) {
-                        return NextResponse.next();
-                    } else {
-                        return new NextResponse("Dont have access to this page.", { status: 404 })
-                    }
-                } else {
-                    return NextResponse.next();
-                }
-            }
-        } else {
-            if (!isAuthenticationRoute) {
-                return NextResponse.redirect(new URL(redirectToAuthentication, req.nextUrl));
+            // console.log(verify_.payload)            
+            if (!isLoggedInRoute) return NextResponse.redirect(new URL(redirectToDashboard, req.nextUrl));
+            // validation here for Previlleges
+            const route: __next_route_internal_types__.StaticRoutes = nextUrl as __next_route_internal_types__.StaticRoutes
+            if (route == '/dashboard/profiles') {
+                const canViewProfiles = verify_.payload?.previlleges.find(prev => prev.includes("profiles_view"))
+                if (canViewProfiles) return NextResponse.next();
+                return new NextResponse("Dont have access to this page.", { status: 404 })
             } else {
                 return NextResponse.next();
             }
+        } else {
+            if (!isAuthenticationRoute) return NextResponse.redirect(new URL(redirectToAuthentication, req.nextUrl));
+            return NextResponse.next();
         }
 
     }
